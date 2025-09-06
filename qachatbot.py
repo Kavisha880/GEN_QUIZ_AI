@@ -1,28 +1,25 @@
-# qachatbot.py
-import re, json
+# qachatbot.py — uses your server-side key only (no user input)
+import os, re, json
 from pathlib import Path
 from datetime import datetime
 from typing import List, Dict
 import streamlit as st
 
+from dotenv import load_dotenv              # for local .env fallback
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.messages import HumanMessage, AIMessage
 
 # ---------------- CONFIG ----------------
+load_dotenv()  # reads .env locally; on Streamlit Cloud you'll use Secrets
 st.set_page_config(page_title="GEN QUIZ AI", page_icon="🤖", layout="wide")
 HISTORY_FILE = Path("quiz_history.json")
 
 # CSS for colored tiles
 st.markdown("""
 <style>
-.option-tile {
-  border: 2px solid var(--border, #ddd);
-  border-radius: 12px;
-  padding: 10px 12px;
-  margin: 8px 0;
-}
+.option-tile { border: 2px solid var(--border, #ddd); border-radius: 12px; padding: 10px 12px; margin: 8px 0; }
 .option-correct { --border: #31a24c; }  /* green */
 .option-wrong   { --border: #e64848; }  /* red   */
 .option-neutral { --border: #ddd;    }  /* gray  */
@@ -32,7 +29,7 @@ st.markdown("""
 st.title("GEN QUIZ AI")
 st.caption("Generate MCQs with Groq. Click an option to check; use 'Show answer' at the end.")
 
-# ---------------- PERSISTENCE (file) ----------------
+# ---------------- PERSISTENCE ----------------
 def load_history() -> List[Dict]:
     if HISTORY_FILE.exists():
         try:
@@ -47,15 +44,22 @@ def save_history(items: List[Dict]):
 # ---------------- SESSION DEFAULTS ----------------
 st.session_state.setdefault("history", load_history())
 st.session_state.setdefault("messages", [])
-st.session_state.setdefault("current_blocks", [])   # <-- where the latest questions live
+st.session_state.setdefault("current_blocks", [])
 st.session_state.setdefault("current_raw", "")
 st.session_state.setdefault("current_topic", "")
 st.session_state.setdefault("current_num", 0)
 
-# ---------------- SIDEBAR ----------------
+# ---------------- API KEY (Secrets → env/.env) ----------------
+def get_api_key() -> str | None:
+    try:
+        key = st.secrets.get("GROQ_API_KEY")
+    except Exception:
+        key = None
+    return key or os.getenv("GROQ_API_KEY")
+
+# ---------------- SIDEBAR (no key prompt) ----------------
 with st.sidebar:
     st.header("Settings")
-    api_key = st.text_input("Groq API Key", type="password", help="Get your API key from https://groq.com")
     model_name = st.selectbox("Model", ["llama-3.1-8b-instant", "llama-3.3-70b-versatile"])
     st.caption(f"📜 Saved runs: **{len(st.session_state.history)}**")
     if st.button("Clear All History 🧹"):
@@ -65,13 +69,14 @@ with st.sidebar:
         st.rerun()
 
 # ---------------- LLM ----------------
-@st.cache_resource
-def get_llm(groq_api_key: str, model_name: str):
-    if not groq_api_key:
+@st.cache_resource(show_spinner=False)
+def get_llm(model_name: str):
+    api_key = get_api_key()
+    if not api_key:
         return None
-    return ChatGroq(groq_api_key=groq_api_key, model_name=model_name, temperature=0.7)
+    return ChatGroq(groq_api_key=api_key, model_name=model_name, temperature=0.7)
 
-llm = get_llm(api_key, model_name)
+llm = get_llm(model_name)
 
 # ---------------- PROMPT / CHAIN ----------------
 mcq_prompt = ChatPromptTemplate.from_messages([
@@ -136,8 +141,7 @@ def add_to_history(topic: str, num: int, response: str):
     })
     save_history(items)
 
-def clear_selection_state(max_q: int):
-    # Remove all per-question selection/reveal keys when new set is generated
+def clear_selection_state(_max_q: int):
     to_delete = []
     for k in list(st.session_state.keys()):
         if k.startswith("sel_") or k.startswith("rev_"):
@@ -145,33 +149,31 @@ def clear_selection_state(max_q: int):
     for k in to_delete:
         st.session_state.pop(k, None)
 
-# ---------- INTERACTIVE MCQ (options are buttons, show answer at end) ----------
+# ---------- INTERACTIVE MCQ ----------
 def render_mcq_interactive(qid: int, question: str, options: List[str], correct_letter: str):
-    sel_key = f"sel_{qid}"   # selected option letter
-    rev_key = f"rev_{qid}"   # reveal flag
+    sel_key = f"sel_{qid}"
+    rev_key = f"rev_{qid}"
 
     st.markdown(f"**Q{qid+1}. {question}**")
 
     chosen = st.session_state.get(sel_key)
     revealed = st.session_state.get(rev_key, False)
 
-    # If not chosen & not revealed -> show options as BUTTONS
+    # initial state → buttons
     if not chosen and not revealed:
         for opt in options:
-            # opt like "a) text..."
             letter = opt.split(')')[0].strip().lower()
-            label = opt  # keep "a) ..." label
+            label = opt
             if st.button(label, key=f"optbtn-{qid}-{letter}", use_container_width=True):
                 st.session_state[sel_key] = letter
                 st.rerun()
 
-        # Show answer button at the end
         if st.button("Show answer", key=f"reveal-{qid}", type="secondary"):
             st.session_state[rev_key] = True
             st.rerun()
         return
 
-    # Otherwise -> show colored tiles
+    # colored tiles after selection/reveal
     for opt in options:
         letter = opt.split(')')[0].strip().lower()
         if revealed:
@@ -186,10 +188,8 @@ def render_mcq_interactive(qid: int, question: str, options: List[str], correct_
                 css = "option-correct" if letter == correct_letter else "option-wrong"
             else:
                 css = "option-neutral"
-
         st.markdown(f'<div class="option-tile {css}">{opt}</div>', unsafe_allow_html=True)
 
-    # Controls under tiles
     c1, c2 = st.columns([1,1])
     with c1:
         if not revealed and st.button("Change selection", key=f"reset-{qid}"):
@@ -215,14 +215,15 @@ with tab_generate:
         num_questions = st.number_input("Number of questions", min_value=1, max_value=20,
                                         value=int(st.session_state.current_num or 5), step=1)
 
-    # Generate button
     run = st.button("Generate MCQs 🚀", use_container_width=True, type="primary")
 
+    # If key not configured, show a developer-only message (no textbox anywhere)
+    if llm is None:
+        st.warning("Server key missing. Set GROQ_API_KEY in Streamlit Secrets (Cloud) or in your local .env.", icon="🔑")
+
     if run:
-        if not api_key:
-            st.error("Please add your Groq API key in the sidebar.")
-        elif not llm:
-            st.error("LLM init failed. Re-check key/model.")
+        if not llm:
+            st.error("Service not ready: missing API key (developer setup).")
         elif not topic.strip():
             st.warning("Enter a topic.")
         else:
@@ -232,13 +233,12 @@ with tab_generate:
                 )
             blocks = parse_mcqs(raw)
 
-            # Persist for future reruns
+            # persist for reruns
             st.session_state.current_blocks = blocks
             st.session_state.current_raw = raw
             st.session_state.current_topic = topic
             st.session_state.current_num = int(num_questions)
 
-            # clear old selections
             clear_selection_state(len(blocks))
 
             # Save to history
@@ -246,20 +246,19 @@ with tab_generate:
             st.session_state.messages.append(AIMessage(content=raw))
             add_to_history(topic, num_questions, raw)
 
-            st.rerun()  # show the generated set immediately
+            st.rerun()
 
-    # Always render from session (so clicks don't lose questions)
+    # render current set (keeps state on reruns)
     blocks = st.session_state.current_blocks
     if blocks:
         for i, b in enumerate(blocks):
             render_mcq_interactive(
                 qid=i,
                 question=b["question"],
-                options=b["options"],      # ["a) ...","b) ...","c) ...","d) ..."]
-                correct_letter=b["answer"] # "a"|"b"|"c"|"d"
+                options=b["options"],
+                correct_letter=b["answer"]
             )
             st.divider()
-        # Download current
         if st.session_state.current_raw:
             st.download_button(
                 "Download MCQs (.txt)",
@@ -306,7 +305,6 @@ with tab_history:
                     )
                 with cB:
                     if st.button("Load this set", key=f"load-{h['id']}"):
-                        # Load into current view
                         st.session_state.current_blocks = parse_mcqs(h["response"])
                         st.session_state.current_raw = h["response"]
                         st.session_state.current_topic = h["topic"]
