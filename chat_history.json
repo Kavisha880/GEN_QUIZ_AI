@@ -1,0 +1,26 @@
+[
+  {
+    "role": "HumanMessage",
+    "content": "Topic: Mechanical Engineering, Questions: 5"
+  },
+  {
+    "role": "AIMessage",
+    "content": "Here are 5 Mechanical Engineering MCQs:\n\n**Question 1:** What is the primary function of the crankshaft in an internal combustion engine?\n\na) To convert reciprocating motion into rotational motion\nb) To absorb and dissipate energy\nc) To increase the torque of the engine\nd) To reduce the speed of the engine\n\nAnswer: a\n\n**Question 2:** Which of the following materials is known for its high thermal conductivity and is often used in heat exchangers?\n\na) Copper\nb) Aluminum\nc) Steel\nd) Titanium\n\nAnswer: a\n\n**Question 3:** A gear train with a gear ratio of 3:2 is used to transmit power from a motor to a pump. If the motor's input speed is 1200 rpm, what will be the output speed of the pump?\n\na) 600 rpm\nb) 800 rpm\nc) 1200 rpm\nd) 1800 rpm\n\nAnswer: a\n\n**Question 4:** In a hydraulic system, what is the term for the pressure difference between two points in the system?\n\na) Head loss\nb) Friction loss\nc) Pressure drop\nd) Flow rate\n\nAnswer: c\n\n**Question 5:** A cylinder of a steam engine is initially at a pressure of 10 bar and a temperature of 250\u00b0C. If the steam is allowed to expand to a pressure of 1 bar, what will be the temperature of the steam?\n\na) 120\u00b0C\nb) 150\u00b0C\nc) 180\u00b0C\nd) 200\u00b0C\n\nAnswer: c"
+  },
+  {
+    "role": "HumanMessage",
+    "content": "Topic: LLM, Questions: 5"
+  },
+  {
+    "role": "AIMessage",
+    "content": "Here are five MCQs on LLM (Large Language Model):\n\n**Question 1:** What is a primary characteristic of Large Language Models (LLMs)?\n\na) They are designed to process only visual data\nb) They can generate human-like responses to a wide range of questions and prompts\nc) They are primarily used for translating languages\nd) They require manual programming for every task\n\nAnswer: b\n\n**Question 2:** Which of the following is a benefit of using Large Language Models in natural language processing tasks?\n\na) They are computationally expensive and resource-intensive\nb) They are limited to a specific domain or task\nc) They can learn from vast amounts of data and improve over time\nd) They are not scalable to large datasets\n\nAnswer: c\n\n**Question 3:** What is a significant challenge in training Large Language Models?\n\na) Lack of high-quality training data\nb) Insufficient computational resources\nc) Difficulty in incorporating domain-specific knowledge\nd) All of the above\n\nAnswer: d\n\n**Question 4:** Which of the following is an application of Large Language Models?\n\na) Image recognition and object detection\nb) Speech recognition and synthesis\nc) Natural language processing and text generation\nd) Both a and b\n\nAnswer: c\n\n**Question 5:** What is a common technique used to fine-tune Large Language Models for specific tasks?\n\na) Transfer learning\nb) Supervised learning\nc) Unsupervised learning\nd) Reinforcement learning\n\nAnswer: a"
+  },
+  {
+    "role": "HumanMessage",
+    "content": "Topic: LLM, Questions: 5"
+  },
+  {
+    "role": "AIMessage",
+    "content": "Here are 5 MCQs on the topic of LLM (Large Language Models):\n\n1. What is the primary function of a Large Language Model (LLM)?\na) To generate images from text\nb) To translate text from one language to another\nc) To understand and generate human-like text\nd) To recognize objects in images\n\nAnswer: c\n\n2. Which of the following is a key characteristic of LLMs?\na) They require a small amount of training data\nb) They are only able to understand a limited range of topics\nc) They are able to learn from large amounts of text data\nd) They are only able to generate short pieces of text\n\nAnswer: c\n\n3. What is the name of the popular LLM developed by OpenAI?\na) BERT\nb) RoBERTa\nc) ChatGPT\nd) Transformers\n\nAnswer: c\n\n4. What is one of the potential applications of LLMs?\na) Medical diagnosis\nb) Financial analysis\nc) Text summarization\nd) All of the above\n\nAnswer: d\n\n5. What is a challenge faced by LLMs when generating text?\na) Ensuring the text is grammatically correct\nb) Ensuring the text is factually accurate\nc) Ensuring the text is engaging and interesting to read\nd) All of the above\n\nAnswer: d"
+  }
+]

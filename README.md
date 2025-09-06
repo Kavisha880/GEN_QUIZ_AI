@@ -1,2 +1,0 @@
-# GEN_QUIZ_AI
-
